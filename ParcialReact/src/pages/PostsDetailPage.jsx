@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getPostById } from '../services/posts.service';
 
 const PostsDetailPage = () => {
-  
   const { id } = useParams();
+  const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,7 +12,6 @@ const PostsDetailPage = () => {
   useEffect(() => {
     const fetchPostDetail = async () => {
       try {
-        
         const data = await getPostById(id);
         setPost(data);
       } catch (err) {
@@ -21,35 +20,34 @@ const PostsDetailPage = () => {
         setLoading(false);
       }
     };
-    
     fetchPostDetail();
   }, [id]);
 
-  if (loading) return <div>Cargando detalle del post...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!post) return <div>No se encontró el post.</div>;
+  if (loading) {
+    return (
+      <div className="container-detail">
+        <div className="loading"><div className="spinner" /></div>
+      </div>
+    );
+  }
+  if (error) return <div className="container-detail"><div className="empty">Error: {error}</div></div>;
+  if (!post) return <div className="container-detail"><div className="empty">No se encontró el post.</div></div>;
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-      <p style={{ color: '#888' }}>Post ID: {post.id}</p>
-      <h2>{post.title}</h2>
-      <p style={{ fontSize: '18px', lineHeight: '1.6' }}>{post.body}</p>
-      
-      <div style={{ marginTop: '30px' }}>
-        
-        <Link to="/" style={{ 
-          padding: '10px 15px', 
-          background: '#333', 
-          color: 'white', 
-          textDecoration: 'none', 
-          borderRadius: '4px' 
-        }}>
-          Volver al listado
-        </Link>
+    <div className="container-detail">
+      <button className="back-btn" onClick={() => navigate('/')}>← Volver</button>
+      <div style={{ animation: 'fadeUp .25s ease both' }}>
+        <div className="detail-head">
+          <span className="badge">Post {post.id}</span>
+          <button className="link-edit" onClick={() => navigate(`/editar/${post.id}`)}>
+            Editar
+          </button>
+        </div>
+        <h2 className="detail-title">{post.title}</h2>
+        <p className="detail-body">{post.body}</p>
       </div>
     </div>
   );
 };
-
 
 export default PostsDetailPage;

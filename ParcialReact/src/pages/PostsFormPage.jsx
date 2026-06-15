@@ -1,76 +1,72 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPost } from '../services/posts.service';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getPostById, createPost, updatePost } from '../services/posts.service';
+import PostForm from '../components/PostForm';
 
-const PostFormPage = () => {
+const PostsFormPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEdit = Boolean(id);
+
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const navigate = useNavigate();
-  const titleInputRef = useRef(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (titleInputRef.current) {
-      titleInputRef.current.focus();
+    if (isEdit) {
+      getPostById(id).then((d) => {
+        setTitle(d.title);
+        setBody(d.body);
+      });
     }
-  }, []);
+  }, [id, isEdit]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const handleSubmit = async () => {
+    if (!title.trim() || !body.trim()) return;
+    setSubmitting(true);
     try {
-      const newPost = await createPost({ title, body, userId: 1 });
-      console.log('Post creado:', newPost);
-      navigate('/');
-    } catch (error) {
-      alert('Hubo un error al crear el post');
-    } finally {
-      setIsSubmitting(false);
+      if (isEdit) {
+        await updatePost(id, { title, body });
+        navigate(`/posts/${id}`);
+      } else {
+        await createPost({ title, body, userId: 1 });
+        setSuccess(true);
+        setTimeout(() => navigate('/'), 1000);
+      }
+    } catch {
+      alert('Hubo un error al guardar el post');
+      setSubmitting(false);
     }
   };
 
+  if (success) {
+    return (
+      <div className="container-narrow">
+        <div className="success">
+          <div className="check">✓</div>
+          <span style={{ color: 'var(--text-sub)', fontSize: 13 }}>Post creado</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container form-container">
-      <h2>Crear Nuevo Post</h2>
-      <form onSubmit={handleSubmit}>
-        
-        <div className="form-group">
-          <label htmlFor="title">Título:</label>
-          <input 
-            id="title"
-            type="text" 
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            ref={titleInputRef}
-            required
-            placeholder="Escribe el título del post"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="body">Contenido:</label>
-          <textarea 
-            id="body"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            required
-            rows="5"
-            placeholder="Escribe el contenido..."
-          />
-        </div>
-
-        <button 
-          type="submit" 
-          disabled={isSubmitting} 
-          className="btn btn-primary"
-        >
-          {isSubmitting ? 'Guardando...' : 'Guardar Post'}
-        </button>
-      </form>
+    <div className="container-narrow">
+      <button className="back-btn" onClick={() => navigate(-1)}>← Volver</button>
+      <h2 className="page-title">{isEdit ? 'Editar post' : 'Nuevo post'}</h2>
+      <PostForm
+        title={title}
+        body={body}
+        setTitle={setTitle}
+        setBody={setBody}
+        onSubmit={handleSubmit}
+        submitting={submitting}
+        isEdit={isEdit}
+        onCancel={() => navigate(-1)}
+      />
     </div>
   );
 };
 
-export default PostFormPage;
+export default PostsFormPage;

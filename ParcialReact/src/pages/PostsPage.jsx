@@ -1,35 +1,68 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { usePosts } from '../hooks/usePosts';
+import PostsCard from '../components/PostsCard';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const PostsPage = () => {
   const { posts, loading, error, removePost } = usePosts();
+  const [search, setSearch] = useState('');
+  const [pending, setPending] = useState(null);
 
-  if (loading) return <div className="container">Cargando listado de posts...</div>;
-  if (error) return <div className="container">Error: {error}</div>;
+  const filtered = posts.filter((p) =>
+    p.title.toLowerCase().includes(search.toLowerCase()) ||
+    String(p.id).includes(search.trim())
+  );
+
+  if (loading) {
+    return (
+      <div className="container">
+        <div className="loading">
+          <div className="spinner" />
+          <span style={{ fontSize: 13 }}>Cargando posts…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="container"><div className="empty">Error: {error}</div></div>;
+  }
+
+  const confirmDelete = async () => {
+    await removePost(pending);
+    setPending(null);
+  };
 
   return (
     <div className="container">
-      <h2>Listado de Posts</h2>
-      <div className="card-grid">
-        {posts.map((post) => (
-          <div key={post.id} className="post-card">
-            <h3>{post.title}</h3>
-            <p>{post.body.substring(0, 80)}...</p>
-            
-            <div className="card-actions">
-              <Link to={`/posts/${post.id}`} className="btn btn-primary">
-                Ver Detalle
-              </Link>
-              <button 
-                onClick={() => removePost(post.id)}
-                className="btn btn-danger"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        ))}
+      <div className="page-head">
+        <h1>Posts</h1>
+        <span className="count">{filtered.length} resultados</span>
       </div>
+      <div className="search-wrap">
+        <input
+          placeholder="Buscar…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+      <div className="cards-grid">
+        {filtered.length === 0 ? (
+          <div className="empty" style={{ gridColumn: '1 / -1' }}>
+            {search ? `Sin resultados para "${search}"` : 'No hay posts.'}
+          </div>
+        ) : (
+          filtered.map((p, i) => (
+            <PostsCard key={p.id} post={p} index={i} onDelete={setPending} />
+          ))
+        )}
+      </div>
+      {pending && (
+        <ConfirmDeleteModal
+          onConfirm={confirmDelete}
+          onCancel={() => setPending(null)}
+        />
+      )}
     </div>
   );
 };

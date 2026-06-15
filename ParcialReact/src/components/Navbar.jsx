@@ -1,12 +1,14 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
   return (
     <nav className="navbar">
-      <h2>Parcial React</h2>
-      <div className="navbar-links">
-        <Link to="/">Listado de Posts</Link>
-        <Link to="/crear">Crear Nuevo</Link>
+      <NavLink to="/" className="navbar__brand">TP Laboratorio</NavLink>
+      <div className="navbar__links">
+        <NavLink to="/" end className="nav-link">Posts</NavLink>
+        <NavLink to="/crear" className="nav-link">Crear</NavLink>
+        <ThemeToggle />
       </div>
     </nav>
   );
