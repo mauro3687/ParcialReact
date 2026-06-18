@@ -47,5 +47,5 @@ export const usePosts = () => {
     }
   };
 
-  return { posts, loading, error, addPost, editPost, removePost };
+return { posts, setPosts, loading, error, removePost };
 };

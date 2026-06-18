@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { usePosts } from '../hooks/usePosts';
 import PostsCard from '../components/PostsCard';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
-const PostsPage = () => {
-  const { posts, loading, error, removePost } = usePosts();
+const PostsPage = ({ posts, loading, error, removePost }) => {
   const [search, setSearch] = useState('');
   const [pending, setPending] = useState(null);
 

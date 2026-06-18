@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getPostById, createPost, updatePost } from '../services/posts.service';
 import PostForm from '../components/PostForm';
 
-const PostsFormPage = () => {
+
+const PostsFormPage = ({ onAgregar, onEditar, posts = [] }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
@@ -15,26 +16,53 @@ const PostsFormPage = () => {
 
   useEffect(() => {
     if (isEdit) {
-      getPostById(id).then((d) => {
-        setTitle(d.title);
-        setBody(d.body);
-      });
+      const postEnMemoria = posts.find((p) => String(p.id) === String(id));
+      if (postEnMemoria) {
+        setTitle(postEnMemoria.title);
+        setBody(postEnMemoria.body);
+      } else {
+        getPostById(id)
+          .then((d) => {
+            setTitle(d.title);
+            setBody(d.body);
+          })
+          .catch((err) => console.error("Error al cargar post:", err));
+      }
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, posts]);
 
   const handleSubmit = async () => {
     if (!title.trim() || !body.trim()) return;
     setSubmitting(true);
     try {
       if (isEdit) {
-        await updatePost(id, { title, body });
+        let postEditado;
+        
+       
+        if (Number(id) > 100) {
+          postEditado = { id: Number(id), title, body, userId: 1 };
+        } else {
+          
+          await updatePost(id, { title, body });
+          postEditado = { id: Number(id), title, body }; 
+        }
+
+        
+        if (onEditar) {
+          onEditar(postEditado);
+        }
+        
         navigate(`/posts/${id}`);
       } else {
-        await createPost({ title, body, userId: 1 });
+        const nuevoPost = await createPost({ title, body, userId: 1 });
+        if (onAgregar && nuevoPost) {
+          onAgregar(nuevoPost);
+        }
         setSuccess(true);
         setTimeout(() => navigate('/'), 1000);
       }
-    } catch {
+    } catch (error) {
+      console.error(error);
       alert('Hubo un error al guardar el post');
       setSubmitting(false);
     }

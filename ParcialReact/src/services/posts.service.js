@@ -12,16 +12,16 @@ export const getPostById = async (id) => {
   return await response.json();
 };
 
-export const createPost = async (postData) => {
-  const response = await fetch(API_URL, {
+export const createPost = async (datos) => {
+  const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
     method: 'POST',
-    body: JSON.stringify(postData),
-    headers: { 'Content-type': 'application/json; charset=UTF-8' },
+    body: JSON.stringify(datos),
+    headers: {
+      'Content-type': 'application/json; charset=UTF-8',
+    },
   });
-  if (!response.ok) throw new Error('Error al crear el post');
-  return await response.json();
+  return await response.json(); 
 };
-
 export const updatePost = async (id, postData) => {
   const response = await fetch(`${API_URL}/${id}`, {
     method: 'PUT',
